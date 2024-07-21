@@ -56,8 +56,8 @@ inputs:
     required: false
 
 runs:
-  using: node12
-  main: index.js
+  using: node20
+  main: dist/index.js
 
 branding:
   icon: upload-cloud
