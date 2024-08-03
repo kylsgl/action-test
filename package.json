@@ -10,7 +10,7 @@
 		"pnpm": ">=9"
 	},
 	"scripts": {
-		"build": "tsc",
+		"build": "pnpm test && tsx esbuild",
 		"format": "prettier --write .",
 		"lint": "eslint src --ext ts --report-unused-disable-directives --max-warnings 0",
 		"lint:fix": "pnpm lint --fix",
@@ -19,22 +19,23 @@
 		"test": "tsc --noEmit"
 	},
 	"devDependencies": {
-		"@types/node": "^20.14.11",
-		"@typescript-eslint/eslint-plugin": "^7.16.1",
-		"@typescript-eslint/parser": "^7.16.1",
+		"@types/node": "^22.1.0",
+		"@typescript-eslint/eslint-plugin": "^7.17.0",
+		"@typescript-eslint/parser": "^7.17.0",
+		"esbuild": "^0.23.0",
 		"eslint": "^8.57.0",
 		"eslint-config-airbnb-base": "^15.0.0",
 		"eslint-config-airbnb-typescript": "^18.0.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-import": "^2.29.1",
-		"eslint-plugin-n": "^17.9.0",
-		"eslint-plugin-promise": "^6.4.0",
+		"eslint-plugin-n": "^17.10.1",
+		"eslint-plugin-promise": "^7.0.0",
 		"eslint-plugin-simple-import-sort": "^12.1.1",
 		"eslint-plugin-sonarjs": "^0.25.1",
 		"eslint-plugin-tsdoc": "^0.3.0",
-		"husky": "^9.1.1",
+		"husky": "^9.1.4",
 		"prettier": "^3.3.3",
-		"tsx": "^4.16.2",
-		"typescript": "^5.5.3"
+		"tsx": "^4.16.5",
+		"typescript": "^5.5.4"
 	}
 }
