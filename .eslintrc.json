@@ -103,7 +103,7 @@
 			}
 		],
 		"class-methods-use-this": "off",
-		"no-console": ["warn", { "allow": ["info", "error", "warn"] }],
+		"no-console": "off",
 		"no-void": ["error", { "allowAsStatement": true }],
 		"promise/always-return": ["error", { "ignoreLastCallback": true }],
 		"promise/catch-or-return": ["error", { "allowFinally": true }],

@@ -4,7 +4,11 @@ export interface BuilderParams {
 	args?: string;
 	buildScriptName?: string;
 	githubToken: string;
+	linux: {
+		arch?: string[];
+	};
 	mac: {
+		arch?: string[];
 		cert?: string;
 		password?: string;
 	};
@@ -13,6 +17,7 @@ export interface BuilderParams {
 	platform: Platform;
 	release?: boolean;
 	windows: {
+		arch?: string[];
 		cert?: string;
 		password?: string;
 	};

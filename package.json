@@ -14,9 +14,10 @@
 		"format": "prettier --write .",
 		"lint": "eslint src --ext ts --report-unused-disable-directives --max-warnings 0",
 		"lint:fix": "pnpm lint --fix",
-		"precommit": "pnpm lint:fix && pnpm format && pnpm test",
+		"precommit": "pnpm lint:fix && pnpm format && pnpm build",
 		"start": "node --env-file=.env ./dist/app.js",
-		"test": "tsc --noEmit"
+		"test": "tsc --noEmit",
+		"prepare": "husky"
 	},
 	"devDependencies": {
 		"@types/node": "^22.1.0",

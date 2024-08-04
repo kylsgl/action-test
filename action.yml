@@ -16,6 +16,10 @@ inputs:
     description: Whether the app should be released after a successful build
     required: false
     default: false
+  windows_arch:
+    description: Target arch for Windows
+    required: false
+    default: ''
   windows_certs:
     description: Base64-encoded code signing certificate for Windows
     required: false
@@ -33,27 +37,19 @@ inputs:
     description: Name of the optional NPM build script which is executed before `electron-builder`
     required: false
     default: build
-  skip_build:
-    description: Whether the action should execute the NPM build script before running `electron-builder`
-    required: false
-    default: false
-  use_vue_cli:
-    description: Whether to run `electron-builder` using the Vue CLI plugin instead of calling the command directly
-    required: false
-    default: false
   args:
     description: Other arguments to pass to the `electron-builder` command, e.g. configuration overrides
     required: false
     default: ''
-  max_attempts:
-    description: Maximum number of attempts for completing the build and release step
+  linux_arch:
+    description: Target arch for linux.
     required: false
-    default: '1'
+    default: ''
+
+branding:
+  icon: package
+  color: blue
 
 runs:
   using: node20
   main: dist/action.js
-
-branding:
-  icon: upload-cloud
-  color: blue

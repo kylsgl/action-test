@@ -17,8 +17,24 @@ function getPlatform() {
     }
   }
 }
+function isValidString(str) {
+  return str != null && str.length > 0;
+}
 function getInput(name) {
   return process.env[`INPUT_${name.toUpperCase()}`];
+}
+function getMultiLineInput(name) {
+  const input = getInput(name);
+  const inputArr = [];
+  if (input !== void 0) {
+    input.split(/[\r\n]/).forEach((str) => {
+      const cleanStr = str.trim();
+      if (isValidString(cleanStr)) {
+        inputArr.push(cleanStr);
+      }
+    });
+  }
+  return inputArr;
 }
 function setEnv(name, value) {
   if (value == null) {
@@ -27,7 +43,7 @@ function setEnv(name, value) {
   process.env[name.toUpperCase()] = value.toString();
 }
 function run(command, cwd) {
-  const commandStr = Array.isArray(command) ? command.filter((str) => str.length > 0).join(" ") : command;
+  const commandStr = Array.isArray(command) ? command.filter(isValidString).join(" ") : command;
   execSync(commandStr, {
     encoding: "utf8",
     stdio: "inherit",
@@ -54,46 +70,74 @@ function builder({
   args = "",
   buildScriptName,
   githubToken,
-  mac = {},
+  linux,
+  mac,
   packageManager = "NPM",
   packageRoot = ".",
   platform,
   release = false,
-  windows = {}
+  windows
 }) {
-  setEnv("GH_TOKEN", githubToken);
   const commands = packageManagerCommands[packageManager];
   if (commands === void 0) {
     throw new Error(`${packageManager} is not supported`);
   }
-  const packageJSONPath = join(packageRoot, "package.json");
-  if (!existsSync(packageJSONPath)) {
+  if (!existsSync(join(packageRoot, "package.json"))) {
     throw new Error("package.json not found");
   }
   if (buildScriptName !== void 0) {
     run([commands.script, buildScriptName], packageRoot);
   }
+  const archs = [];
   switch (platform) {
+    case "linux": {
+      if (linux.arch !== void 0) {
+        archs.push(...linux.arch);
+      }
+      break;
+    }
     case "mac": {
       setEnv("CSC_LINK", mac.cert);
       setEnv("CSC_KEY_PASSWORD", mac.password);
       break;
     }
     case "windows": {
-      setEnv("CSC_LINK", windows.cert);
-      setEnv("CSC_KEY_PASSWORD", windows.password);
+      if (windows.arch !== void 0) {
+        archs.push(...windows.arch);
+      }
+      setEnv("WIN_CSC_LINK", windows.cert);
+      setEnv("WIN_CSC_KEY_PASSWORD", windows.password);
       break;
     }
     default: {
       break;
     }
   }
+  setEnv("GH_TOKEN", githubToken);
+  const platformFlag = `--${platform}`;
+  const publishFlag = release ? "--publish always" : "";
+  if (archs.length > 0) {
+    archs.forEach((arch) => {
+      run(
+        [
+          commands.electronBuilder,
+          "electron-builder",
+          platformFlag,
+          `--${arch}`,
+          publishFlag,
+          args
+        ],
+        packageRoot
+      );
+    });
+    return;
+  }
   run(
     [
       commands.electronBuilder,
       "electron-builder",
-      `--${platform}`,
-      release ? "--publish always" : "",
+      platformFlag,
+      publishFlag,
       args
     ],
     packageRoot
@@ -109,6 +153,9 @@ function main() {
       args: getInput("args"),
       buildScriptName: getInput("build_script_name"),
       githubToken,
+      linux: {
+        arch: getMultiLineInput("linux_arch")
+      },
       mac: {
         cert: getInput("mac_certs"),
         password: getInput("mac_certs_password")
@@ -118,6 +165,7 @@ function main() {
       platform: getPlatform(),
       release: getInput("release") === "true",
       windows: {
+        arch: getMultiLineInput("windows_arch"),
         cert: getInput("windows_certs"),
         password: getInput("windows_certs_password")
       }
