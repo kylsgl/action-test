@@ -16,8 +16,8 @@ export function getPlatform(): Platform {
 	}
 }
 
-export function isValidString(str: string | null | undefined): boolean {
-	return str != null && str.length > 0;
+export function isValidString(str: string | null | undefined): str is string {
+	return typeof str === 'string' && str.length > 0;
 }
 
 export function getInput(name: string): string | undefined {
@@ -46,15 +46,17 @@ export function setEnv(
 	name: string,
 	value: bigint | boolean | number | string | null | undefined,
 ): void {
-	if (value == null) {
+	const cleanValue: string | undefined = value?.toString().trim();
+
+	if (!isValidString(cleanValue)) {
 		return;
 	}
 
-	process.env[name.toUpperCase()] = value.toString();
+	process.env[name.toUpperCase()] = cleanValue;
 }
 
 export function run(
-	command: string[] | string,
+	command: Array<string | null | undefined> | string,
 	cwd: URL | string | undefined,
 ): void {
 	const commandStr: string = Array.isArray(command)

@@ -1,8 +1,8 @@
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync } from 'fs';
+import { join } from 'path';
 
 import { type BuilderParams, type PackageManagerCommands } from './types';
-import { getInput, getMultiLineInput, getPlatform, run, setEnv } from './utils';
+import { run, setEnv } from './utils';
 
 const packageManagerCommands: Record<
 	string,
@@ -17,12 +17,12 @@ const packageManagerCommands: Record<
 		script: 'pnpm run',
 	},
 	YARN: {
-		electronBuilder: 'yarn run',
+		electronBuilder: 'yarn',
 		script: 'yarn run',
 	},
 };
 
-function builder({
+export default function builder({
 	args = '',
 	buildScriptName,
 	githubToken,
@@ -35,7 +35,7 @@ function builder({
 	windows,
 }: BuilderParams): void {
 	const commands: PackageManagerCommands | undefined =
-		packageManagerCommands[packageManager];
+		packageManagerCommands[packageManager.toUpperCase()];
 
 	if (commands === undefined) {
 		throw new Error(`${packageManager} is not supported`);
@@ -69,6 +69,10 @@ function builder({
 			break;
 		}
 		case 'mac': {
+			if (mac.arch !== undefined) {
+				archs.push(...mac.arch);
+			}
+
 			setEnv('CSC_LINK', mac.cert);
 
 			setEnv('CSC_KEY_PASSWORD', mac.password);
@@ -95,7 +99,7 @@ function builder({
 
 	const platformFlag = `--${platform}`;
 
-	const publishFlag: string = release ? '--publish always' : '';
+	const publishFlag: string | null = release ? '--publish always' : null;
 
 	if (archs.length > 0) {
 		/**
@@ -129,41 +133,3 @@ function builder({
 		packageRoot,
 	);
 }
-
-function main(): void {
-	try {
-		const githubToken: string | undefined = getInput('github_token');
-
-		if (githubToken === undefined) {
-			throw new Error('Github Token not found');
-		}
-
-		builder({
-			args: getInput('args'),
-			buildScriptName: getInput('build_script_name'),
-			githubToken,
-			linux: {
-				arch: getMultiLineInput('linux_arch'),
-			},
-			mac: {
-				cert: getInput('mac_certs'),
-				password: getInput('mac_certs_password'),
-			},
-			packageManager: getInput('package_manager'),
-			packageRoot: getInput('package_root'),
-			platform: getPlatform(),
-			release: getInput('release') === 'true',
-			windows: {
-				arch: getMultiLineInput('windows_arch'),
-				cert: getInput('windows_certs'),
-				password: getInput('windows_certs_password'),
-			},
-		});
-	} catch (error: unknown) {
-		console.error(error);
-
-		process.exit(1);
-	}
-}
-
-main();

@@ -3,7 +3,7 @@ import { build, type BuildOptions } from 'esbuild';
 const opts: BuildOptions = {
 	bundle: true,
 	drop: ['debugger'],
-	entryPoints: ['./src/action.ts'],
+	entryPoints: ['./src/index.ts'],
 	format: 'esm',
 	legalComments: 'none',
 	minify: false,

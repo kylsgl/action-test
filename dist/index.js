@@ -1,6 +1,6 @@
-// src/action.ts
-import { existsSync } from "node:fs";
-import { join } from "node:path";
+// src/builder.ts
+import { existsSync } from "fs";
+import { join } from "path";
 
 // src/utils.ts
 import { execSync } from "child_process";
@@ -18,7 +18,7 @@ function getPlatform() {
   }
 }
 function isValidString(str) {
-  return str != null && str.length > 0;
+  return typeof str === "string" && str.length > 0;
 }
 function getInput(name) {
   return process.env[`INPUT_${name.toUpperCase()}`];
@@ -37,10 +37,11 @@ function getMultiLineInput(name) {
   return inputArr;
 }
 function setEnv(name, value) {
-  if (value == null) {
+  const cleanValue = value?.toString().trim();
+  if (!isValidString(cleanValue)) {
     return;
   }
-  process.env[name.toUpperCase()] = value.toString();
+  process.env[name.toUpperCase()] = cleanValue;
 }
 function run(command, cwd) {
   const commandStr = Array.isArray(command) ? command.filter(isValidString).join(" ") : command;
@@ -51,7 +52,7 @@ function run(command, cwd) {
   });
 }
 
-// src/action.ts
+// src/builder.ts
 var packageManagerCommands = {
   NPM: {
     electronBuilder: "npx --no-install",
@@ -62,7 +63,7 @@ var packageManagerCommands = {
     script: "pnpm run"
   },
   YARN: {
-    electronBuilder: "yarn run",
+    electronBuilder: "yarn",
     script: "yarn run"
   }
 };
@@ -78,7 +79,7 @@ function builder({
   release = false,
   windows
 }) {
-  const commands = packageManagerCommands[packageManager];
+  const commands = packageManagerCommands[packageManager.toUpperCase()];
   if (commands === void 0) {
     throw new Error(`${packageManager} is not supported`);
   }
@@ -97,6 +98,9 @@ function builder({
       break;
     }
     case "mac": {
+      if (mac.arch !== void 0) {
+        archs.push(...mac.arch);
+      }
       setEnv("CSC_LINK", mac.cert);
       setEnv("CSC_KEY_PASSWORD", mac.password);
       break;
@@ -115,7 +119,7 @@ function builder({
   }
   setEnv("GH_TOKEN", githubToken);
   const platformFlag = `--${platform}`;
-  const publishFlag = release ? "--publish always" : "";
+  const publishFlag = release ? "--publish always" : null;
   if (archs.length > 0) {
     archs.forEach((arch) => {
       run(
@@ -143,6 +147,8 @@ function builder({
     packageRoot
   );
 }
+
+// src/index.ts
 function main() {
   try {
     const githubToken = getInput("github_token");
@@ -157,8 +163,8 @@ function main() {
         arch: getMultiLineInput("linux_arch")
       },
       mac: {
-        cert: getInput("mac_certs"),
-        password: getInput("mac_certs_password")
+        cert: getInput("mac_cert"),
+        password: getInput("mac_cert_password")
       },
       packageManager: getInput("package_manager"),
       packageRoot: getInput("package_root"),
@@ -166,8 +172,8 @@ function main() {
       release: getInput("release") === "true",
       windows: {
         arch: getMultiLineInput("windows_arch"),
-        cert: getInput("windows_certs"),
-        password: getInput("windows_certs_password")
+        cert: getInput("windows_cert"),
+        password: getInput("windows_cert_password")
       }
     });
   } catch (error) {
