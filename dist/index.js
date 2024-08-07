@@ -1,19 +1,22 @@
 // src/builder.ts
-import { existsSync } from "fs";
-import { join } from "path";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 
 // src/utils.ts
-import { execSync } from "child_process";
+import { execSync } from "node:child_process";
 function getPlatform() {
   switch (process.platform) {
     case "darwin": {
       return "mac";
     }
+    case "linux": {
+      return "linux";
+    }
     case "win32": {
       return "windows";
     }
     default: {
-      return "linux";
+      return null;
     }
   }
 }
@@ -21,13 +24,14 @@ function isValidString(str) {
   return typeof str === "string" && str.length > 0;
 }
 function getInput(name) {
-  return process.env[`INPUT_${name.toUpperCase()}`];
+  const input = process.env[`INPUT_${name.toUpperCase()}`];
+  return isValidString(input) ? input : void 0;
 }
-function getMultiLineInput(name) {
+function getInputMultiLine(name) {
   const input = getInput(name);
   const inputArr = [];
   if (input !== void 0) {
-    input.split(/[\r\n]/).forEach((str) => {
+    input.split("\n").forEach((str) => {
       const cleanStr = str.trim();
       if (isValidString(cleanStr)) {
         inputArr.push(cleanStr);
@@ -69,14 +73,15 @@ var packageManagerCommands = {
 };
 function builder({
   args = "",
-  buildScriptName,
+  configPath,
   githubToken,
   linux,
   mac,
   packageManager = "NPM",
   packageRoot = ".",
   platform,
-  release = false,
+  publish = false,
+  scriptBeforeBuild,
   windows
 }) {
   const commands = packageManagerCommands[packageManager.toUpperCase()];
@@ -86,40 +91,23 @@ function builder({
   if (!existsSync(join(packageRoot, "package.json"))) {
     throw new Error("package.json not found");
   }
-  if (buildScriptName !== void 0) {
-    run([commands.script, buildScriptName], packageRoot);
+  if (scriptBeforeBuild !== void 0) {
+    run([commands.script, scriptBeforeBuild], packageRoot);
   }
   const archs = [];
-  switch (platform) {
-    case "linux": {
-      if (linux.arch !== void 0) {
-        archs.push(...linux.arch);
-      }
-      break;
-    }
-    case "mac": {
-      if (mac.arch !== void 0) {
-        archs.push(...mac.arch);
-      }
-      setEnv("CSC_LINK", mac.cert);
-      setEnv("CSC_KEY_PASSWORD", mac.password);
-      break;
-    }
-    case "windows": {
-      if (windows.arch !== void 0) {
-        archs.push(...windows.arch);
-      }
-      setEnv("WIN_CSC_LINK", windows.cert);
-      setEnv("WIN_CSC_KEY_PASSWORD", windows.password);
-      break;
-    }
-    default: {
-      break;
-    }
+  if (platform === "linux" && linux.arch !== void 0) {
+    archs.push(...linux.arch);
+  }
+  if (platform === "mac" && mac.arch !== void 0) {
+    archs.push(...mac.arch);
+  }
+  if (platform === "windows" && windows.arch !== void 0) {
+    archs.push(...windows.arch);
   }
   setEnv("GH_TOKEN", githubToken);
+  const configFlag = configPath === void 0 ? void 0 : `--config ${configPath}`;
   const platformFlag = `--${platform}`;
-  const publishFlag = release ? "--publish always" : null;
+  const publishFlag = `--publish ${publish ? "always" : "never"}`;
   if (archs.length > 0) {
     archs.forEach((arch) => {
       run(
@@ -129,6 +117,7 @@ function builder({
           platformFlag,
           `--${arch}`,
           publishFlag,
+          configFlag,
           args
         ],
         packageRoot
@@ -142,6 +131,7 @@ function builder({
       "electron-builder",
       platformFlag,
       publishFlag,
+      configFlag,
       args
     ],
     packageRoot
@@ -150,35 +140,32 @@ function builder({
 
 // src/index.ts
 function main() {
-  try {
-    const githubToken = getInput("github_token");
-    if (githubToken === void 0) {
-      throw new Error("Github Token not found");
-    }
-    builder({
-      args: getInput("args"),
-      buildScriptName: getInput("build_script_name"),
-      githubToken,
-      linux: {
-        arch: getMultiLineInput("linux_arch")
-      },
-      mac: {
-        cert: getInput("mac_cert"),
-        password: getInput("mac_cert_password")
-      },
-      packageManager: getInput("package_manager"),
-      packageRoot: getInput("package_root"),
-      platform: getPlatform(),
-      release: getInput("release") === "true",
-      windows: {
-        arch: getMultiLineInput("windows_arch"),
-        cert: getInput("windows_cert"),
-        password: getInput("windows_cert_password")
-      }
-    });
-  } catch (error) {
-    console.error(error);
-    process.exit(1);
+  const githubToken = getInput("github_token");
+  if (githubToken === void 0) {
+    throw new Error("Github Token not found");
   }
+  const platform = getPlatform();
+  if (platform === null) {
+    throw new Error(`Platform ${process.platform} is not supported`);
+  }
+  builder({
+    args: getInput("args"),
+    configPath: getInput("config_path"),
+    githubToken,
+    linux: {
+      arch: getInputMultiLine("linux_arch")
+    },
+    mac: {
+      arch: getInputMultiLine("mac_arch")
+    },
+    packageManager: getInput("package_manager"),
+    packageRoot: getInput("package_root"),
+    platform,
+    publish: getInput("publish") === "true",
+    scriptBeforeBuild: getInput("script_before_build"),
+    windows: {
+      arch: getInputMultiLine("windows_arch")
+    }
+  });
 }
 main();

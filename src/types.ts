@@ -2,24 +2,21 @@ export type Platform = 'linux' | 'mac' | 'windows';
 
 export interface BuilderParams {
 	args?: string;
-	buildScriptName?: string;
+	configPath?: string;
 	githubToken: string;
 	linux: {
 		arch?: string[];
 	};
 	mac: {
 		arch?: string[];
-		cert?: string;
-		password?: string;
 	};
 	packageManager?: string;
 	packageRoot?: string;
 	platform: Platform;
-	release?: boolean;
+	publish?: boolean;
+	scriptBeforeBuild?: string;
 	windows: {
 		arch?: string[];
-		cert?: string;
-		password?: string;
 	};
 }
 

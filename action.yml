@@ -4,51 +4,43 @@ description: GitHub Action for building and releasing Electron apps
 
 inputs:
   args:
-    description: Other arguments to pass to the `electron-builder` command, e.g. configuration overrides
+    description: CLI args to pass to electron-builder
     required: false
     default: ''
-  build_script_name:
-    description: Name of the optional NPM build script which is executed before `electron-builder`
+  config_path:
+    description: Path to electron-builder config file
     required: false
-    default: build
+    default: ''
+  script_before_build:
+    description: Script to run before running electron-builder
+    required: false
+    default: ''
   package_manager:
     description: Package manager to use
     required: false
   package_root:
-    description: Directory where NPM/Yarn commands should be run
+    description: Directory where commands should be run
     required: false
     default: '.'
   github_token:
     description: GitHub authentication token
     required: true
-  release:
-    description: Whether the app should be released after a successful build
+  publish:
+    description: Publish on successful build
     required: false
     default: false
   linux_arch:
-    description: Target arch for linux.
+    description: Target arch for Linux.
     required: false
     default: ''
   mac_arch:
-    description: Target arch for mac.
+    description: Target arch for MacOS.
     required: false
     default: ''
-  mac_cert:
-    description: Base64-encoded code signing certificate for macOS
-    required: false
-  mac_cert_password:
-    description: Password for decrypting `mac_cert`
-    required: false
   windows_arch:
     description: Target arch for Windows
     required: false
     default: ''
-  windows_cert:
-    description: Base64-encoded code signing certificate for Windows
-    required: false
-  windows_cert_password:
-    description: Password for decrypting `windows_cert`
-    required: false
 
 branding:
   icon: package

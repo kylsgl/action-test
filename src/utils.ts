@@ -1,17 +1,20 @@
-import { execSync } from 'child_process';
+import { execSync } from 'node:child_process';
 
 import { type Platform } from './types';
 
-export function getPlatform(): Platform {
+export function getPlatform(): Platform | null {
 	switch (process.platform) {
 		case 'darwin': {
 			return 'mac';
+		}
+		case 'linux': {
+			return 'linux';
 		}
 		case 'win32': {
 			return 'windows';
 		}
 		default: {
-			return 'linux';
+			return null;
 		}
 	}
 }
@@ -21,16 +24,18 @@ export function isValidString(str: string | null | undefined): str is string {
 }
 
 export function getInput(name: string): string | undefined {
-	return process.env[`INPUT_${name.toUpperCase()}`];
+	const input: string | undefined = process.env[`INPUT_${name.toUpperCase()}`];
+
+	return isValidString(input) ? input : undefined;
 }
 
-export function getMultiLineInput(name: string): string[] {
+export function getInputMultiLine(name: string): string[] {
 	const input: string | undefined = getInput(name);
 
 	const inputArr: string[] = [];
 
 	if (input !== undefined) {
-		input.split(/[\r\n]/).forEach((str: string): void => {
+		input.split('\n').forEach((str: string): void => {
 			const cleanStr: string = str.trim();
 
 			if (isValidString(cleanStr)) {
@@ -57,7 +62,7 @@ export function setEnv(
 
 export function run(
 	command: Array<string | null | undefined> | string,
-	cwd: URL | string | undefined,
+	cwd?: URL | string,
 ): void {
 	const commandStr: string = Array.isArray(command)
 		? command.filter(isValidString).join(' ')

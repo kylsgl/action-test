@@ -1,5 +1,5 @@
-import { existsSync } from 'fs';
-import { join } from 'path';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 
 import { type BuilderParams, type PackageManagerCommands } from './types';
 import { run, setEnv } from './utils';
@@ -24,14 +24,15 @@ const packageManagerCommands: Record<
 
 export default function builder({
 	args = '',
-	buildScriptName,
+	configPath,
 	githubToken,
 	linux,
 	mac,
 	packageManager = 'NPM',
 	packageRoot = '.',
 	platform,
-	release = false,
+	publish = false,
+	scriptBeforeBuild,
 	windows,
 }: BuilderParams): void {
 	const commands: PackageManagerCommands | undefined =
@@ -49,57 +50,34 @@ export default function builder({
 	}
 
 	/**
-	 * Run build script if provided
+	 * Run script before build if provided
 	 */
-	if (buildScriptName !== undefined) {
-		run([commands.script, buildScriptName], packageRoot);
+	if (scriptBeforeBuild !== undefined) {
+		run([commands.script, scriptBeforeBuild], packageRoot);
 	}
 
 	const archs: string[] = [];
 
-	/**
-	 * Set signing certificate and password
-	 */
-	switch (platform) {
-		case 'linux': {
-			if (linux.arch !== undefined) {
-				archs.push(...linux.arch);
-			}
+	if (platform === 'linux' && linux.arch !== undefined) {
+		archs.push(...linux.arch);
+	}
 
-			break;
-		}
-		case 'mac': {
-			if (mac.arch !== undefined) {
-				archs.push(...mac.arch);
-			}
+	if (platform === 'mac' && mac.arch !== undefined) {
+		archs.push(...mac.arch);
+	}
 
-			setEnv('CSC_LINK', mac.cert);
-
-			setEnv('CSC_KEY_PASSWORD', mac.password);
-
-			break;
-		}
-		case 'windows': {
-			if (windows.arch !== undefined) {
-				archs.push(...windows.arch);
-			}
-
-			setEnv('WIN_CSC_LINK', windows.cert);
-
-			setEnv('WIN_CSC_KEY_PASSWORD', windows.password);
-
-			break;
-		}
-		default: {
-			break;
-		}
+	if (platform === 'windows' && windows.arch !== undefined) {
+		archs.push(...windows.arch);
 	}
 
 	setEnv('GH_TOKEN', githubToken);
 
+	const configFlag: string | undefined =
+		configPath === undefined ? undefined : `--config ${configPath}`;
+
 	const platformFlag = `--${platform}`;
 
-	const publishFlag: string | null = release ? '--publish always' : null;
+	const publishFlag = `--publish ${publish ? 'always' : 'never'}`;
 
 	if (archs.length > 0) {
 		/**
@@ -113,6 +91,7 @@ export default function builder({
 					platformFlag,
 					`--${arch}`,
 					publishFlag,
+					configFlag,
 					args,
 				],
 				packageRoot,
@@ -128,6 +107,7 @@ export default function builder({
 			'electron-builder',
 			platformFlag,
 			publishFlag,
+			configFlag,
 			args,
 		],
 		packageRoot,
