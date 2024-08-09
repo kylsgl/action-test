@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { type BuilderParams, type PackageManagerCommands } from './types';
-import { run, setEnv } from './utils';
+import { run } from './utils';
 
 const packageManagerCommands: Record<
 	string,
@@ -25,7 +25,6 @@ const packageManagerCommands: Record<
 export default function builder({
 	args = '',
 	configPath,
-	githubToken,
 	linux,
 	mac,
 	packageManager = 'NPM',
@@ -69,8 +68,6 @@ export default function builder({
 	if (platform === 'windows' && windows.arch !== undefined) {
 		archs.push(...windows.arch);
 	}
-
-	setEnv('GH_TOKEN', githubToken);
 
 	const configFlag: string | undefined =
 		configPath === undefined ? undefined : `--config ${configPath}`;

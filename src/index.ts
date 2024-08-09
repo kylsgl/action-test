@@ -3,12 +3,6 @@ import { type Platform } from './types';
 import { getInput, getInputMultiLine, getPlatform } from './utils';
 
 function main(): void {
-	const githubToken: string | undefined = getInput('github_token');
-
-	if (githubToken === undefined) {
-		throw new Error('Github Token not found');
-	}
-
 	const platform: Platform | null = getPlatform();
 
 	if (platform === null) {
@@ -18,7 +12,6 @@ function main(): void {
 	builder({
 		args: getInput('args'),
 		configPath: getInput('config_path'),
-		githubToken,
 		linux: {
 			arch: getInputMultiLine('linux_arch'),
 		},

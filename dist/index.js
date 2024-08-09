@@ -40,13 +40,6 @@ function getInputMultiLine(name) {
   }
   return inputArr;
 }
-function setEnv(name, value) {
-  const cleanValue = value?.toString().trim();
-  if (!isValidString(cleanValue)) {
-    return;
-  }
-  process.env[name.toUpperCase()] = cleanValue;
-}
 function run(command, cwd) {
   const commandStr = Array.isArray(command) ? command.filter(isValidString).join(" ") : command;
   execSync(commandStr, {
@@ -74,7 +67,6 @@ var packageManagerCommands = {
 function builder({
   args = "",
   configPath,
-  githubToken,
   linux,
   mac,
   packageManager = "NPM",
@@ -104,7 +96,6 @@ function builder({
   if (platform === "windows" && windows.arch !== void 0) {
     archs.push(...windows.arch);
   }
-  setEnv("GH_TOKEN", githubToken);
   const configFlag = configPath === void 0 ? void 0 : `--config ${configPath}`;
   const platformFlag = `--${platform}`;
   const publishFlag = `--publish ${publish ? "always" : "never"}`;
@@ -140,10 +131,6 @@ function builder({
 
 // src/index.ts
 function main() {
-  const githubToken = getInput("github_token");
-  if (githubToken === void 0) {
-    throw new Error("Github Token not found");
-  }
   const platform = getPlatform();
   if (platform === null) {
     throw new Error(`Platform ${process.platform} is not supported`);
@@ -151,7 +138,6 @@ function main() {
   builder({
     args: getInput("args"),
     configPath: getInput("config_path"),
-    githubToken,
     linux: {
       arch: getInputMultiLine("linux_arch")
     },

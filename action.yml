@@ -22,9 +22,6 @@ inputs:
     description: Directory where commands should be run
     required: false
     default: '.'
-  github_token:
-    description: GitHub authentication token
-    required: true
   publish:
     description: Publish on successful build
     required: false

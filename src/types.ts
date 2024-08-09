@@ -3,7 +3,6 @@ export type Platform = 'linux' | 'mac' | 'windows';
 export interface BuilderParams {
 	args?: string;
 	configPath?: string;
-	githubToken: string;
 	linux: {
 		arch?: string[];
 	};
