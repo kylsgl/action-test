@@ -9,7 +9,7 @@
 		"plugin:@typescript-eslint/strict-type-checked",
 		"plugin:@typescript-eslint/stylistic-type-checked",
 		"plugin:promise/recommended",
-		"plugin:sonarjs/recommended",
+		"plugin:sonarjs/recommended-legacy",
 		"prettier"
 	],
 	"ignorePatterns": [
@@ -109,6 +109,8 @@
 		"promise/catch-or-return": ["error", { "allowFinally": true }],
 		"simple-import-sort/exports": "error",
 		"simple-import-sort/imports": "error",
+		"sonarjs/different-types-comparison": "off",
+		"sonarjs/function-return-type": "off",
 		"tsdoc/syntax": "warn"
 	},
 	"settings": {

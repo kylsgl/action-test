@@ -68,6 +68,7 @@ export function run(
 		? command.filter(isValidString).join(' ')
 		: command;
 
+	// eslint-disable-next-line sonarjs/os-command
 	execSync(commandStr, {
 		encoding: 'utf8',
 		stdio: 'inherit',
